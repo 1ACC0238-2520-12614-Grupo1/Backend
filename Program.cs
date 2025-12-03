@@ -10,7 +10,9 @@ using FuelTrack.Api.Features.Profile.Domain;
 using FuelTrack.Api.Features.Profile.Data;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseUrls("http://0.0.0.0:5101");
+
+// NOTA: Se eliminó builder.WebHost.UseUrls(...) 
+// Docker y Render asignarán el puerto automáticamente (8080).
 
 // Registramos servicios MVC / Controllers
 builder.Services.AddControllers();
@@ -28,19 +30,21 @@ builder.Services.AddSingleton<IHomeRepository, InMemoryHomeRepository>();
 builder.Services.AddSingleton<IPaymentsRepository, InMemoryPaymentsRepository>();
 builder.Services.AddSingleton<IProfileRepository, InMemoryProfileRepository>();
 
-
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-app.UseStaticFiles(); // antes de app.UseRouting();
-app.UseHttpsRedirection();
+// --- CORRECCIÓN: Swagger habilitado fuera del IF ---
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseStaticFiles(); 
+
+// app.UseHttpsRedirection(); // A veces es mejor comentar esto en Render si hay problemas de redirección, pero dejémoslo por ahora.
 app.UseAuthorization();
 
 // Usar controllers (OrdersController, etc.)
 app.MapControllers();
+
+// --- TRUCO: Redirigir la página de inicio a Swagger ---
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();
