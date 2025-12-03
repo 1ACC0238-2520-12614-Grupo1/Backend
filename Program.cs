@@ -1,0 +1,46 @@
+using FuelTrack.Api.Features.Orders.Data;
+using FuelTrack.Api.Features.Orders.Domain;
+using FuelTrack.Api.Features.Auth.Data;
+using FuelTrack.Api.Features.Auth.Domain;
+using FuelTrack.Api.Features.Home.Data;
+using FuelTrack.Api.Features.Home.Domain;
+using FuelTrack.Api.Features.Payments.Domain;
+using FuelTrack.Api.Features.Payments.Data;
+using FuelTrack.Api.Features.Profile.Domain;
+using FuelTrack.Api.Features.Profile.Data;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls("http://0.0.0.0:5101");
+
+// Registramos servicios MVC / Controllers
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    // Usar el nombre completo del tipo como schemaId para evitar colisiones
+    c.CustomSchemaIds(type => type.FullName?.Replace('.', '_'));
+});
+
+// Inyectamos repositorios (por ahora solo Orders, in-memory)
+builder.Services.AddSingleton<IOrdersRepository, InMemoryOrdersRepository>();
+builder.Services.AddSingleton<IAuthRepository, InMemoryAuthRepository>();
+builder.Services.AddSingleton<IHomeRepository, InMemoryHomeRepository>();
+builder.Services.AddSingleton<IPaymentsRepository, InMemoryPaymentsRepository>();
+builder.Services.AddSingleton<IProfileRepository, InMemoryProfileRepository>();
+
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+app.UseStaticFiles(); // antes de app.UseRouting();
+app.UseHttpsRedirection();
+app.UseAuthorization();
+
+// Usar controllers (OrdersController, etc.)
+app.MapControllers();
+
+app.Run();
